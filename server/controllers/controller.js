@@ -49,4 +49,37 @@ const signIn = async(req,res)=>{
 }
 
 
-export  {signIn,signUp};
+
+const allData = async (req,res)=>{
+    const user = await User.findById(req.id);
+    return res.status(200).json({token:req.token,...user_doc});
+}
+
+
+const validateToken = async(req,res)=>{
+    try{
+        const token = req.header('auth-token');
+    if(!token){
+        return res.json(false)
+    }
+    const isValid =  jwt.verify(token,'passwordKey');
+    if(!isValid){
+        return res.json(false);
+    }
+
+    const user = await User.findById(isValid.id);
+    if(!user){
+        res.json(false);
+    }
+
+    res.json(true)
+
+
+    }catch(e){
+        return res.status(500).json({error:e});
+    }
+}
+
+
+
+export  {signIn,signUp,allData,validateToken};
