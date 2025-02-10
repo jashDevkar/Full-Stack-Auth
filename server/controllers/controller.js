@@ -18,7 +18,7 @@ import jwt from 'jsonwebtoken'
             password:hashPassword,
         })
         const result = await user.save();
-        return res.status(200).json({user:result})
+        return res.status(200).json({...result._doc})
 
     }catch(e){
         res.status(500).json({error:e.message});
@@ -39,7 +39,7 @@ const signIn = async(req,res)=>{
         if(!validUser){
             return res.status(400).json({mssg:'Invalid password'});  
         }
-        const token =    jwt.sign({id:user._id},'passwordKey');
+        const token = jwt.sign({id:user._id},'passwordKey');
         return  res.status(200).json({token,...user._doc});
 
 
@@ -69,10 +69,10 @@ const validateToken = async(req,res)=>{
 
     const user = await User.findById(isValid.id);
     if(!user){
-        res.json(false);
+        return res.json(false);
     }
 
-    res.json(true)
+    return res.json(true)
 
 
     }catch(e){

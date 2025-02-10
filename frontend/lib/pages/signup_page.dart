@@ -1,10 +1,12 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:frontend/bloc/auth_bloc.dart';
 import 'package:frontend/constants/contants.dart';
 import 'package:frontend/pages/signin_page.dart';
 import 'package:frontend/services/auth_service.dart';
 import 'package:frontend/widgets/input_field.dart';
+import 'package:frontend/widgets/loading.dart';
+import 'package:frontend/widgets/show_snack_bar.dart';
 import 'package:page_transition/page_transition.dart';
 
 class SignupPage extends StatefulWidget {
@@ -53,26 +55,22 @@ class _SignupPageState extends State<SignupPage> {
     return null;
   }
 
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Password is required';
+    }
+    return null;
+  }
+
   void _submitForm(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   SnackBar(content: Text("Form Submitted Successfully!")),
-      // );
-      try {
-        final response = await authService.signUp(
-            name: _nameController.text,
-            email: _emailController.text,
-            password: _passwordController.text);
-
-        if (response.statusCode == 200) {
-          _emailController.clear();
-          _nameController.clear();
-          _passwordController.clear();
-        }
-
-        // print(response.statusCode);
-        // print(jsonDecode(response.body));
-      } catch (e) {}
+      BlocProvider.of<AuthBloc>(context).add(
+        OnAuthSignUp(
+          name: _nameController.text,
+          email: _emailController.text,
+          password: _passwordController.text,
+        ),
+      );
     }
   }
 
@@ -85,53 +83,75 @@ class _SignupPageState extends State<SignupPage> {
           title: Text("Signup"),
         ),
         body: Center(
-          child: Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                spacing: 10.0,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  InputField(
-                    validateInputField: _validateName,
-                    controller: _nameController,
-                    hintText: "Name",
-                  ),
-                  InputField(
-                    validateInputField: _validateEmail,
-                    controller: _emailController,
-                    hintText: "Email",
-                  ),
-                  InputField(
-                    validateInputField: (val) {},
-                    controller: _passwordController,
-                    hintText: "Password",
-                  ),
-                  TextButton(
-                    style: TextButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: Colors.blueGrey.shade700,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10.0))),
-                    onPressed: () => _submitForm(context),
-                    child: Text('Signup'),
-                  ),
-                  Center(
-                    child: GestureDetector(
-                      onTap: () => Navigator.push(
-                        context,
-                        PageTransition(
-                            type: PageTransitionType.rightToLeftWithFade,
-                            child: SigninPage()),
+          child: BlocConsumer<AuthBloc, AuthState>(
+            listener: (context, state) {
+              if (state is AuthFailure) {
+                showSnackBar(context, state.message);
+              }
+            },
+            builder: (context, state) {
+              if (state is AuthLoading) {
+                return Loading();
+              }
+              return Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    spacing: 10.0,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      //name
+                      InputField(
+                        validateInputField: _validateName,
+                        controller: _nameController,
+                        hintText: "Name",
                       ),
-                      child: Text("Login?"),
-                    ),
-                  )
-                ],
-              ),
-            ),
+
+                      //email
+                      InputField(
+                        validateInputField: _validateEmail,
+                        controller: _emailController,
+                        hintText: "Email",
+                      ),
+
+                      //password
+                      InputField(
+                        validateInputField: _validatePassword,
+                        controller: _passwordController,
+                        hintText: "Password",
+                      ),
+
+                      //submit button
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            elevation: 4.0,
+                            foregroundColor: Colors.black,
+                            backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0))),
+                        onPressed: () => _submitForm(context),
+                        child: Text('Signup'),
+                      ),
+
+                      //login page text
+                      Center(
+                        child: GestureDetector(
+                          onTap: () => Navigator.push(
+                            context,
+                            PageTransition(
+                                type: PageTransitionType.rightToLeft,
+                                child: SigninPage()),
+                          ),
+                          child: Text("Login?"),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),

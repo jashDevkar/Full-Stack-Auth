@@ -1,12 +1,24 @@
 import 'dart:convert';
 
 import 'package:frontend/constants/contants.dart';
-import 'package:frontend/constants/models/user_model.dart';
 import 'package:http/http.dart' as http;
 
 class AuthService {
-  Future<void> signIn(
-      {required String email, required String password}) async {}
+  Future<http.Response> signIn(
+      {required String email, required String password}) async {
+    try {
+      final http.Response res = await http.post(
+        Uri.parse('${Constants.uri}/api/signin'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({"email": email, "password": password}),
+      );
+      return res;
+    } catch (e) {
+      throw Future.error(e);
+    }
+  }
 
   //sigup
   Future<http.Response> signUp({
@@ -14,11 +26,6 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    UserModel userModel = UserModel(
-      name: name,
-      email: email,
-      password: password,
-    );
 
     try {
       final http.Response res = await http.post(
@@ -26,7 +33,7 @@ class AuthService {
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
-        body: userModel.toJson(),
+        body: jsonEncode({"name":name,"email":email,"password":password}),
       );
       return res;
     } catch (e) {
