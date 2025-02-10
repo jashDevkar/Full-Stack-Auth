@@ -26,14 +26,48 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-
     try {
       final http.Response res = await http.post(
         Uri.parse('${Constants.uri}/api/signup'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
-        body: jsonEncode({"name":name,"email":email,"password":password}),
+        body: jsonEncode({"name": name, "email": email, "password": password}),
+      );
+      return res;
+    } catch (e) {
+      throw Future.error(e.toString());
+    }
+  }
+
+  Future<http.Response> validateToken({
+    required String token,
+  }) async {
+    try {
+      final http.Response res = await http.post(
+        Uri.parse('${Constants.uri}/tokenIsValid'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'auth-token': token
+        },
+      );
+      return res;
+    } catch (e) {
+      throw Future.error(e.toString());
+    }
+  }
+
+
+  Future<http.Response> getUserData({
+    required String token,
+  }) async {
+    try {
+      final http.Response res = await http.get(
+        Uri.parse('${Constants.uri}/'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'auth-token': token
+        },
       );
       return res;
     } catch (e) {

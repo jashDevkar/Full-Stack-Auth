@@ -9,7 +9,13 @@ part 'auth_event.dart';
 part 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  late UserModel _userModel = UserModel();
+  UserModel _userModel = UserModel(
+    name: '',
+    email: '',
+    password: '',
+    token: '',
+    id: '',
+  );
   final Box _box = Hive.box('auth-token');
   final AuthService authService = AuthService();
 
@@ -19,11 +25,80 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthEvent>(
       (event, emit) => emit(AuthLoading()),
     );
-    on<OnAuthSignUp>(onSignUpButtonPress);
-    on<OnAuthSignIn>(onSignInButtonPress);
-    on<IsUserLogedIn>(getAllUserData);
-    on<SignOut>(signOutUser);
+    on<OnAuthSignUp>(onSignUpEvent);
+    on<OnAuthSignIn>(onSignInEvent);
+    on<ValidateCurrentUser>(validateCurrentUser);
+    on<OnSignOut>(signOutUser);
   }
+
+  void onSignUpEvent(OnAuthSignUp event, Emitter emit) async {
+    final http.Response response = await authService.signUp(
+      name: event.name,
+      email: event.email,
+      password: event.password,
+    );
+
+    final responseBody = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      emit(AuthSuccess());
+    } else if (response.statusCode == 500) {
+      emit(AuthFailure(message: responseBody['error']));
+    } else {
+      emit(AuthFailure(message: responseBody['mssg']));
+    }
+  }
+
+  void onSignInEvent(OnAuthSignIn event, Emitter emit) async {
+    try {
+      final http.Response response = await authService.signIn(
+        email: event.email,
+        password: event.password,
+      );
+
+      final Map<String, dynamic> responseBody = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        _userModel = UserModel.fromMap(responseBody);
+        await _box.put('Token', _userModel.token);
+        emit(AuthSuccess());
+      } else if (response.statusCode == 500) {
+        emit(AuthFailure(message: responseBody['error']));
+      } else {
+        emit(AuthFailure(message: responseBody['mssg']));
+      }
+    } catch (e) {
+      emit(AuthFailure(message: e.toString()));
+    }
+  }
+
+  void validateCurrentUser(ValidateCurrentUser event, Emitter emit) async {
+    final String? token = _box.get(
+      'Token',
+    );
+    if (token != null) {
+      final http.Response response =
+          await authService.validateToken(token: token);
+      final responseBody = jsonDecode(response.body);
+      if (responseBody == true) {
+        final data = await authService.getUserData(token: token);
+        _userModel = UserModel.fromJson(data.body);
+        emit(AuthSignedIn());
+      } else {
+        emit(AuthFailure(message: 'User is not authenticated'));
+      }
+    } else {
+      emit(AuthInitial());
+    }
+  }
+
+  void signOutUser(OnSignOut event, Emitter emit) async {
+    final res = await _box.clear();
+    emit(AuthInitial());
+  }
+}
+
+
+
 
   // void onSignUpButtonPress(OnAuthSignUp event, Emitter emit) async {
   //   final http.Response response = await authService.signUp(
@@ -90,4 +165,3 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   //   _userModel = UserModel();
   //   emit(AuthSuccess());
   // }
-}

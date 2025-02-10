@@ -27,7 +27,8 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   @override
   void initState() {
-    BlocProvider.of<AuthBloc>(context).add(IsUserLogedIn());
+    BlocProvider.of<AuthBloc>(context).add(ValidateCurrentUser());
+
     super.initState();
   }
 
@@ -46,10 +47,11 @@ class _MyAppState extends State<MyApp> {
           if (state is AuthLoading) {
             return Loading();
           }
-          if (BlocProvider.of<AuthBloc>(context).userModel.name == null) {
-            return SignupPage();
+          if (state is AuthSignedIn) {
+            return HomePage();
           }
-          return HomePage();
+
+          return SignupPage();
         },
       ),
     );

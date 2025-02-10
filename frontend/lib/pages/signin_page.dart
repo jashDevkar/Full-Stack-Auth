@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/bloc/auth_bloc.dart';
+import 'package:frontend/pages/home_page.dart';
 import 'package:frontend/widgets/input_field.dart';
 import 'package:page_transition/page_transition.dart';
 
@@ -36,10 +37,12 @@ class SigninPage extends StatelessWidget {
   }
 
   void _submitForm(BuildContext context) {
-    BlocProvider.of<AuthBloc>(context).add(OnAuthSignIn(
-        email: _emailController.text,
-        password: _passwordController.text,
-        context: context));
+    if (_formKey.currentState!.validate()) {
+      BlocProvider.of<AuthBloc>(context).add(OnAuthSignIn(
+          email: _emailController.text,
+          password: _passwordController.text,
+          context: context));
+    }
   }
 
   @override
@@ -49,7 +52,8 @@ class SigninPage extends StatelessWidget {
         if (state is AuthSuccess) {
           Navigator.push(
             context,
-            PageTransition(type: PageTransitionType.rightToLeft),
+            PageTransition(
+                type: PageTransitionType.rightToLeft, child: HomePage()),
           );
         }
       },

@@ -51,8 +51,9 @@ const signIn = async(req,res)=>{
 
 
 const allData = async (req,res)=>{
+    const token = req.token;
     const user = await User.findById(req.id);
-    return res.status(200).json({token:req.token,...user_doc});
+    return res.status(200).json({token:token,...user._doc});
 }
 
 

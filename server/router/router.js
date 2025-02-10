@@ -11,7 +11,7 @@ const router = express.Router();
 router.post("/api/signin",signIn);
 router.post("/api/signup",signUp);
 router.get("/",userIsValid,allData);
-router.get("/tokenIsValid",validateToken);
+router.post("/tokenIsValid",validateToken);
 
 
 

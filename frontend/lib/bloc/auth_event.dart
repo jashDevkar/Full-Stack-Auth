@@ -8,8 +8,11 @@ class OnAuthSignIn extends AuthEvent {
   final String password;
   final BuildContext context;
 
-  OnAuthSignIn(
-      {required this.email, required this.password, required this.context});
+  OnAuthSignIn({
+    required this.email,
+    required this.password,
+    required this.context,
+  });
 }
 
 class OnAuthSignUp extends AuthEvent {
@@ -26,4 +29,6 @@ class OnAuthSignUp extends AuthEvent {
 
 class IsUserLogedIn extends AuthEvent {}
 
-class SignOut extends AuthEvent {}
+class ValidateCurrentUser extends AuthEvent {}
+
+class OnSignOut extends AuthEvent {}

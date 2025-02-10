@@ -9,6 +9,9 @@ final class AuthLoading extends AuthState {}
 
 final class AuthSuccess extends AuthState {}
 
+final class AuthSignedIn extends AuthState {}
+
+
 final class AuthFailure extends AuthState {
   final String message;
 
